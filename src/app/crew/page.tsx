@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
 import { getAllCrewMembers } from '@/lib/data'
 import { CrewMember, CrewDepartment } from '@/types'
 
@@ -18,25 +19,46 @@ const allDepartments: CrewDepartment[] = [
 ]
 
 export default function CrewPage() {
+  const [allCrewMembers] = React.useState<CrewMember[]>(() => getAllCrewMembers())
   const [searchQuery, setSearchQuery] = React.useState('')
   const [selectedDepartments, setSelectedDepartments] = React.useState<CrewDepartment[]>([])
+  const [selectedSkills, setSelectedSkills] = React.useState<string[]>([])
   const [sortBy, setSortBy] = React.useState<string>('name')
   const [showFilters, setShowFilters] = React.useState(false)
 
+  // Pick up a ?q= search term passed from the homepage search bar
+  React.useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get('q')
+    if (q) setSearchQuery(q)
+  }, [])
+
+  // Derive the skills filter list from the real crew data
+  const allSkills = React.useMemo(
+    () => Array.from(new Set(allCrewMembers.flatMap(member => member.skills))).sort(),
+    [allCrewMembers]
+  )
+
   const filteredCrew = React.useMemo(() => {
-    let crew = getAllCrewMembers()
+    let crew = allCrewMembers
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       crew = crew.filter(member =>
         member.name.toLowerCase().includes(query) ||
         member.title.toLowerCase().includes(query) ||
+        member.department.toLowerCase().includes(query) ||
         member.skills.some(skill => skill.toLowerCase().includes(query))
       )
     }
 
     if (selectedDepartments.length > 0) {
       crew = crew.filter(member => selectedDepartments.includes(member.department))
+    }
+
+    if (selectedSkills.length > 0) {
+      crew = crew.filter(member =>
+        selectedSkills.some(skill => member.skills.includes(skill))
+      )
     }
 
     crew = [...crew].sort((a, b) => {
@@ -46,7 +68,7 @@ export default function CrewPage() {
     })
 
     return crew
-  }, [searchQuery, selectedDepartments, sortBy])
+  }, [allCrewMembers, searchQuery, selectedDepartments, selectedSkills, sortBy])
 
   const toggleDepartment = (department: CrewDepartment) => {
     setSelectedDepartments(prev =>
@@ -54,8 +76,15 @@ export default function CrewPage() {
     )
   }
 
+  const toggleSkill = (skill: string) => {
+    setSelectedSkills(prev =>
+      prev.includes(skill) ? prev.filter(s => s !== skill) : [...prev, skill]
+    )
+  }
+
   const clearFilters = () => {
     setSelectedDepartments([])
+    setSelectedSkills([])
     setSearchQuery('')
   }
 
@@ -68,7 +97,7 @@ export default function CrewPage() {
             <div className="relative flex-1 max-w-xl">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search crew by name, title, or skills..."
+                placeholder="Search crew by name, title, department, or skills..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -88,12 +117,17 @@ export default function CrewPage() {
             </Select>
           </div>
 
-          {selectedDepartments.length > 0 && (
+          {(selectedDepartments.length > 0 || selectedSkills.length > 0) && (
             <div className="flex items-center gap-2 mt-3 flex-wrap">
               <span className="text-sm text-muted-foreground">Active filters:</span>
               {selectedDepartments.map(department => (
                 <Badge key={department} variant="secondary" className="cursor-pointer" onClick={() => toggleDepartment(department)}>
                   {department} <X className="h-3 w-3 ml-1" />
+                </Badge>
+              ))}
+              {selectedSkills.map(skill => (
+                <Badge key={skill} variant="secondary" className="cursor-pointer" onClick={() => toggleSkill(skill)}>
+                  {skill} <X className="h-3 w-3 ml-1" />
                 </Badge>
               ))}
               <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs h-6 px-2">
@@ -122,6 +156,25 @@ export default function CrewPage() {
                           className="rounded border-muted"
                         />
                         <span className="text-sm">{department}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h3 className="font-semibold mb-3">Skills</h3>
+                  <div className="space-y-2">
+                    {allSkills.map(skill => (
+                      <label key={skill} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedSkills.includes(skill)}
+                          onChange={() => toggleSkill(skill)}
+                          className="rounded border-muted"
+                        />
+                        <span className="text-sm">{skill}</span>
                       </label>
                     ))}
                   </div>

@@ -13,11 +13,10 @@ import { getAllActors } from '@/lib/data'
 import { Actor } from '@/types'
 import { cn } from '@/lib/utils'
 
-const allSkills = ['Drama', 'Comedy', 'Action', 'Musical', 'Voiceover', 'Stunt Work', 'Improv', 'Period Drama', 'Noir', 'Sci-Fi']
-const allGenres = ['Film', 'Television', 'Theatre', 'Commercial', 'Voiceover', 'Short Film']
 const sortOptions = ['name', 'experience', 'recent']
 
 export default function ActorsPage() {
+  const [allActors] = React.useState<Actor[]>(() => getAllActors())
   const [searchQuery, setSearchQuery] = React.useState('')
   const [selectedSkills, setSelectedSkills] = React.useState<string[]>([])
   const [selectedGenres, setSelectedGenres] = React.useState<string[]>([])
@@ -30,43 +29,55 @@ export default function ActorsPage() {
     if (q) setSearchQuery(q)
   }, [])
 
+  // Derive filter options from the real actor data, not a hardcoded list
+  const allSkills = React.useMemo(
+    () => Array.from(new Set(allActors.flatMap(actor => actor.skills))).sort(),
+    [allActors]
+  )
+  const allGenres = React.useMemo(
+    () => Array.from(new Set(allActors.flatMap(actor => actor.genres))).sort(),
+    [allActors]
+  )
+
   // Filter and sort actors
   const filteredActors = React.useMemo(() => {
-    let actors = getAllActors()
+    let actors = allActors
 
-    // Search filter
+    // Search filter — matches name, headline, skills, accents, and genres
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
-      actors = actors.filter(actor => 
+      actors = actors.filter(actor =>
         actor.name.toLowerCase().includes(query) ||
         actor.headline?.toLowerCase().includes(query) ||
-        actor.skills.some(skill => skill.toLowerCase().includes(query))
+        actor.skills.some(skill => skill.toLowerCase().includes(query)) ||
+        actor.accents.some(accent => accent.toLowerCase().includes(query)) ||
+        actor.genres.some(genre => genre.toLowerCase().includes(query))
       )
     }
 
     // Skills filter
     if (selectedSkills.length > 0) {
-      actors = actors.filter(actor => 
+      actors = actors.filter(actor =>
         selectedSkills.some(skill => actor.skills.includes(skill))
       )
     }
 
     // Genres filter
     if (selectedGenres.length > 0) {
-      actors = actors.filter(actor => 
+      actors = actors.filter(actor =>
         selectedGenres.some(genre => actor.genres.includes(genre))
       )
     }
 
     // Sort
-    actors.sort((a, b) => {
+    actors = [...actors].sort((a, b) => {
       if (sortBy === 'name') return a.name.localeCompare(b.name)
       if (sortBy === 'experience') return b.experience.length - a.experience.length
       return 0
     })
 
     return actors
-  }, [searchQuery, selectedSkills, selectedGenres, sortBy])
+  }, [allActors, searchQuery, selectedSkills, selectedGenres, sortBy])
 
   const toggleSkill = (skill: string) => {
     setSelectedSkills(prev => 

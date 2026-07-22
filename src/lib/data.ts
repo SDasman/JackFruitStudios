@@ -55,7 +55,7 @@ export const actors: Actor[] = [
     createdAt: '2024-01-15T10:00:00Z',
     updatedAt: '2024-12-01T10:00:00Z',
     training: [],
-    genres: []
+    genres: ['Film', 'Television', 'Theatre']
   },
   {
     id: '2',
@@ -106,7 +106,7 @@ export const actors: Actor[] = [
     createdAt: '2024-02-20T10:00:00Z',
     updatedAt: '2024-12-01T10:00:00Z',
     training: [],
-    genres: []
+    genres: ['Theatre', 'Television']
   },
   {
     id: '3',
@@ -154,7 +154,7 @@ export const actors: Actor[] = [
     createdAt: '2024-03-10T10:00:00Z',
     updatedAt: '2024-11-15T10:00:00Z',
     training: [],
-    genres: []
+    genres: ['Television', 'Theatre', 'Commercial']
   },
   {
     id: '4',
@@ -201,8 +201,7 @@ export const actors: Actor[] = [
     createdAt: '2024-04-05T10:00:00Z',
     updatedAt: '2024-12-01T10:00:00Z',
         training: [],
-    genres: []
-
+    genres: ['Theatre', 'Television'],
   },
   {
     id: '5',
@@ -249,8 +248,7 @@ export const actors: Actor[] = [
     createdAt: '2024-05-12T10:00:00Z',
     updatedAt: '2024-11-20T10:00:00Z',
         training: [],
-    genres: []
-
+    genres: ['Theatre', 'Short Film'],
   },
 ]
 
